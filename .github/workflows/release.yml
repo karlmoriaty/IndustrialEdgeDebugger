@@ -1,0 +1,38 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Publish
+        run: dotnet publish IndustrialEdgeDebugger.App/IndustrialEdgeDebugger.App.csproj -c Release -o publish
+
+      - name: Package
+        shell: pwsh
+        run: |
+          $name = "IndustrialEdgeDebugger-${{ github.ref_name }}-win-x64"
+          New-Item -ItemType Directory -Path dist | Out-Null
+          Copy-Item publish/IndustrialEdgeDebugger.App.exe dist/
+          Copy-Item README.md, LICENSE dist/
+          Compress-Archive -Path dist/* -DestinationPath "$name.zip"
+
+      - name: Upload release asset
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: IndustrialEdgeDebugger-*.zip
+          generate_release_notes: true

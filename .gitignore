@@ -10,3 +10,6 @@ obj/
 .cache/
 *.cache
 .trae/
+publish/
+dist/
+*.zip
